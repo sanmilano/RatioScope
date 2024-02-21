@@ -30,8 +30,8 @@ python app.py
 
 **Step 1:** Clone this repository or download all the files into a folder.
 
-**Step 2:** Run `install.sh` - This will create a virtual environment and download all necessary files without affecting other Python installations on your system.
+**Step 2:** Run `install_MacOS.sh` - This will create a virtual environment and download all necessary files without affecting other Python installations on your system.
 
-**Step 3:** Use `run.sh` to start the application.
+**Step 3:** Use `start_MacoOS.sh` to start the application.
 
 If you have any suggestions or features you would like to see added to this app, please don't hesitate to contact me!
