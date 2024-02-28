@@ -17,8 +17,8 @@ def closest_aspect_ratio(width, height, aspect_ratios):
 
 def sort_images(image_folder, output_folder, aspect_ratios):
     if not os.path.exists(image_folder):
-        return f"The specified folder does not exist. Please check the path and try again."
-    images = [f for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+        return f"The folder path is incorrect or the folder doesn't exist."
+    images = [f for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg', '.webp', '.JPG', '.PNG', '.gif', '.GIF', '.JPEG', '.WEBP'))]
     total_images = len(images)
     for i, filename in enumerate(images):
         image_path = os.path.join(image_folder, filename)
@@ -33,8 +33,8 @@ def sort_images(image_folder, output_folder, aspect_ratios):
         print(f"Processed {i+1} of {total_images} images.")
 
 def sort_images_by_aspect_ratio(image_folder, output_folder, aspect_ratios):
-    if len(aspect_ratios) < 2 or len(aspect_ratios) > 4:
-        return "Select at least 2 aspect ratios and up to 4."
+    if len(aspect_ratios) < 2 or len(aspect_ratios) > 5:
+        return "Select at least 2 aspect ratios and up to 5."
     aspect_ratios = [eval(ratio.replace(':', '/')) for ratio in aspect_ratios]
     result = sort_images(image_folder, output_folder, aspect_ratios)
     if result:
@@ -73,7 +73,7 @@ def resize_image(input_image_path, output_image_path, size):
 
 def resize_images_in_folder(input_folder, output_folder, size):
     if not os.path.exists(input_folder):
-        return f"The specified folder does not exist. Please check the path and try again."
+        return f"The folder path is incorrect or the folder doesn't exist."
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -118,7 +118,7 @@ aspect_ratio_options = ["16:9", "9:16", "4:5", "5:4", "1:1", "4:3", "3:4", "2:3"
 def calculate_aspect_ratios(folder_path):
     # Check if the folder exists
     if not os.path.isdir(folder_path):
-        return "The specified folder does not exist. Please check the path and try again."
+        return "The folder path is incorrect or the folder doesn't exist."
     aspect_ratios = ["16:9", "1:1", "4:3", "3:2", "2:3", "3:4", "4:5", "5:4", "9:16"]
     aspect_ratio_counts = Counter()
 
@@ -144,6 +144,36 @@ def calculate_aspect_ratios(folder_path):
     output = "; ".join(f"{ratio}, {percentage}%" for ratio, percentage in top_5_percentages)
 
     return output
+
+#Fourth Tab: Calculate Word Count
+def count_words(filename):
+    with open(filename, 'r') as file:
+        content = file.read()
+        words = content.split()
+        return len(words)
+
+def check_word_count(folder_path):
+    # Check if the folder exists
+    if not os.path.exists(folder_path):
+        return "The folder path is incorrect or the folder doesn't exist."
+
+    result = []
+    for root, dirs, files in os.walk(folder_path):
+        for filename in files:
+            if filename.lower().endswith('.txt'):
+                full_path = os.path.join(root, filename)
+                word_count = count_words(full_path)
+                if word_count > 75:
+                    result.append(filename)
+
+    # Check if any caption files were found
+    if not result:
+        return "No caption files were found."
+
+    return "\n".join(result)
+
+def main(folder_path):
+    return check_word_count(folder_path)
 
 with gr.Blocks(title="RatioScope", css="h1 {color: #0f766e}", theme=gr.themes.Base(primary_hue="teal", secondary_hue="yellow", neutral_hue="stone", font=[gr.themes.GoogleFont("Raleway"), "Arial", "sans-serif"])) as demo:
     gr.Markdown(
@@ -172,36 +202,15 @@ with gr.Blocks(title="RatioScope", css="h1 {color: #0f766e}", theme=gr.themes.Ba
             <p>This app simplifies batch image resizing and cropping. Seelect a folder, specify the desired resolution, and the tool resizes images without compromising quality. It analyzes and crops each image precisely, eliminating excess pixels without distortion. The result is an organized collection of images, all resized and cropped to the specified resolution.</p>
 
             """, sanitize_html=False)
-        gr.Interface(fn=resize_images, 
-                     inputs=[gr.Textbox(label="Input folder", placeholder="Write an input folder"), 
-                             gr.Textbox(label="Output folder", placeholder="Write an output folder"), 
-                             gr.Dropdown(choices=resolutions, label="Size"), 
-                             gr.Textbox(label="Custom Width", placeholder="Write an custom Width"), 
-                             gr.Textbox(label="Custom Height", placeholder="Write an custon Height")], 
-                     outputs="text")
-    with gr.Tab("Calculate Aspect Ratio"):
-        gr.Markdown(
-            """
-            <h2>Calculate the Aspect Ratio</h2>
-            <p>This app simplifies aspect ratio calculations for your image dataset. By selecting a single image or an entire folder, it swiftly computes the aspect ratios and presents the top 5 results. This functionality empowers users to effortlessly organize their images based on proportional dimensions, ensuring a streamlined and efficient approach to managing their dataset.</p>
-
-            """, sanitize_html=False)
-        with gr.Accordion("Single Image"):
-            gr.Interface(fn=calculate_aspect_ratio, 
-                         inputs=[gr.Image(label="Upload Image", sources="upload")], 
-                         outputs="text")
-        with gr.Accordion("Batch Images"):
-            gr.Interface(fn=calculate_aspect_ratios, 
-                         inputs=[gr.Textbox(label="Input folder", placeholder="Write an input folder")], 
-                         outputs="text")
-    with gr.Tab("Resolutions Cheatsheet"):
-                gr.Markdown(
-                    """
-                    <h2>Resolutions and Aspect Ratios Cheatsheet</h2>
-                    <p>This resource serves as a guide to the most prevalent aspect ratios, along with their corresponding resolutions based on the training of the base model.</p>
-
-                    """, sanitize_html=False)
-                with gr.Row():
+        with gr.Row():
+                    with gr.Column(scale=2):
+                        gr.Interface(fn=resize_images, 
+                                    inputs=[gr.Textbox(label="Input folder", placeholder="Write an input folder"), 
+                                            gr.Textbox(label="Output folder", placeholder="Write an output folder"), 
+                                            gr.Dropdown(choices=resolutions, label="Size"), 
+                                            gr.Textbox(label="Custom Width", placeholder="Write an custom Width"), 
+                                            gr.Textbox(label="Custom Height", placeholder="Write an custon Height")], 
+                                    outputs="text")
                     with gr.Column(scale=1):
                         gr.Markdown(
                             """
@@ -236,7 +245,7 @@ with gr.Blocks(title="RatioScope", css="h1 {color: #0f766e}", theme=gr.themes.Ba
                                     <td>4:3</td>
                                 </tr>
                                 <tr>
-                                    <td>896 x 1153</td>
+                                    <td>896 x 1152</td>
                                     <td>3:4</td>
                                 </tr>
                                 <tr>
@@ -249,12 +258,32 @@ with gr.Blocks(title="RatioScope", css="h1 {color: #0f766e}", theme=gr.themes.Ba
                                 </tr>
                                 </table>
                             """, sanitize_html=False)
-                    with gr.Column(scale=1):
-                        gr.Markdown(
-                            """
-                            <h3>Stable Diffusion 1.5</h3>
-                            <p>Available on next update.</p>
-                            """, sanitize_html=False)
+    with gr.Tab("Calculate Aspect Ratio"):
+        gr.Markdown(
+            """
+            <h2>Calculate the Aspect Ratio</h2>
+            <p>This app simplifies aspect ratio calculations for your image dataset. By selecting a single image or an entire folder, it swiftly computes the aspect ratios and presents the top 5 results. This functionality empowers users to effortlessly organize their images based on proportional dimensions, ensuring a streamlined and efficient approach to managing their dataset.</p>
+
+            """, sanitize_html=False)
+        with gr.Accordion("Single Image"):
+            gr.Interface(fn=calculate_aspect_ratio, 
+                         inputs=[gr.Image(label="Upload Image", sources="upload")], 
+                         outputs="text")
+        with gr.Accordion("Batch Images"):
+            gr.Interface(fn=calculate_aspect_ratios, 
+                         inputs=[gr.Textbox(label="Input folder", placeholder="Write an input folder")], 
+                         outputs="text")
+    with gr.Tab("Dataset Word Count"):
+            gr.Markdown(
+                """
+                <h2>Detect Long Captions</h2>
+                <p>When employing a mixed approach for captioning your dataset, you may find files exceeding the recommended word limit. This app allows you to easily detect files with word overflow.</p>
+
+                """, sanitize_html=False)
+            gr.Interface(
+                fn=main,
+                inputs=[gr.Textbox(label="Input folder", placeholder="Write an input folder")],
+                outputs="text")
     gr.Markdown(
             """
             <small>Created by <a href='https://github.com/sanmilano'>San Milano</a>.</small>
